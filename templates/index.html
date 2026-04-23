@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AI Sales Lead Predictor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+/* ── RESET ─────────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07071a;
+  --card:rgba(255,255,255,.045);
+  --border:rgba(255,255,255,.09);
+  --blue:#00d4ff;
+  --purple:#8b5cf6;
+  --pink:#ec4899;
+  --green:#00ff88;
+  --red:#ff4466;
+  --gold:#ffd700;
+  --txt:#e8eeff;
+  --sub:#7b8db0;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+/* ── ANIMATED BG ─────────────────────────────────────────── */
+#bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.aurora{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 40%,rgba(139,92,246,.18) 0%,transparent 65%),
+    radial-gradient(ellipse 50% 40% at 85% 20%,rgba(0,212,255,.13) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 50% at 55% 85%,rgba(236,72,153,.09) 0%,transparent 55%);
+  animation:auroraPulse 10s ease-in-out infinite alternate;
+}
+@keyframes auroraPulse{0%{opacity:.6}100%{opacity:1}}
+
+/* ── LAYOUT ──────────────────────────────────────────────── */
+.wrap{position:relative;z-index:1;max-width:1380px;margin:0 auto;padding:20px 24px 40px}
+
+/* ── HEADER ──────────────────────────────────────────────── */
+.hdr{text-align:center;padding:44px 0 32px;animation:fadeDown .8s ease both}
+.hdr h1{
+  font-size:clamp(2rem,5vw,3.4rem);font-weight:900;line-height:1.1;
+  background:linear-gradient(135deg,#00d4ff 0%,#8b5cf6 50%,#ec4899 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200%;animation:gradShift 5s ease infinite;
+}
+@keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.hdr p{color:var(--sub);font-size:1rem;margin-top:10px;font-weight:400}
+
+/* ── ACCURACY PILLS ──────────────────────────────────────── */
+.meta-row{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:0 0 28px;animation:fadeUp .8s ease .2s both}
+.meta-pill{
+  display:flex;align-items:center;gap:7px;padding:7px 16px;border-radius:20px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);font-size:12px;font-weight:600;
+}
+.meta-pill .dot{width:8px;height:8px;border-radius:50%}
+
+/* ── MAIN GRID ────────────────────────────────────────────── */
+.grid{display:grid;grid-template-columns:1fr 400px;gap:22px;align-items:start}
+@media(max-width:1080px){.grid{grid-template-columns:1fr}}
+
+/* ── GLASS CARD ──────────────────────────────────────────── */
+.card{
+  background:var(--card);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--border);border-radius:22px;padding:28px;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;inset:0;border-radius:22px;
+  background:linear-gradient(135deg,rgba(0,212,255,.04),rgba(139,92,246,.04));
+  pointer-events:none;
+}
+
+/* ── SECTION ─────────────────────────────────────────────── */
+.sec{margin-bottom:26px;animation:fadeUp .55s ease both}
+.sec:nth-child(1){animation-delay:.08s}.sec:nth-child(2){animation-delay:.16s}
+.sec:nth-child(3){animation-delay:.24s}.sec:nth-child(4){animation-delay:.32s}
+.sec:nth-child(5){animation-delay:.40s}
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.sec-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--sub)}
+
+/* ── FORM GRID ───────────────────────────────────────────── */
+.fg{display:grid;gap:13px}
+.fg-2{grid-template-columns:1fr 1fr}
+.fg-3{grid-template-columns:1fr 1fr 1fr}
+.fg-1{grid-template-columns:1fr}
+@media(max-width:600px){.fg-2,.fg-3{grid-template-columns:1fr}}
+
+/* ── FIELD ───────────────────────────────────────────────── */
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld label{font-size:11.5px;font-weight:600;color:var(--sub);display:flex;align-items:center;gap:6px}
+.imp{font-size:9.5px;padding:2px 7px;border-radius:8px;font-weight:700;letter-spacing:.5px}
+.imp-h{background:rgba(0,255,136,.12);color:#00ff88}
+.imp-m{background:rgba(255,215,0,.12);color:#ffd700}
+.imp-l{background:rgba(139,92,246,.14);color:#b4a0ff}
+
+/* ── SELECT / INPUT ──────────────────────────────────────── */
+.sel-wrap{position:relative}
+.sel-wrap::after{content:'▾';position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--sub);pointer-events:none;font-size:13px}
+select,input[type=number]{
+  width:100%;padding:10px 14px;border-radius:11px;font-size:13.5px;
+  font-family:'Inter',sans-serif;font-weight:500;
+  background:rgba(255,255,255,.055);border:1px solid var(--border);
+  color:var(--txt);outline:none;appearance:none;-webkit-appearance:none;
+  transition:border-color .25s,box-shadow .25s,background .25s;cursor:pointer;
+}
+select:hover,input[type=number]:hover{border-color:rgba(255,255,255,.2)}
+select:focus,input[type=number]:focus{
+  border-color:var(--blue);background:rgba(0,212,255,.07);
+  box-shadow:0 0 0 3px rgba(0,212,255,.12);
+}
+select option{background:#131330;color:var(--txt)}
+
+/* ── SLIDER ──────────────────────────────────────────────── */
+.slider-wrap{display:flex;flex-direction:column;gap:9px}
+.slider-top{display:flex;justify-content:space-between;align-items:center}
+.slider-top label{font-size:11.5px;font-weight:600;color:var(--sub);display:flex;align-items:center;gap:6px}
+.sval{font-size:13px;font-weight:700;color:var(--blue);background:rgba(0,212,255,.1);padding:3px 11px;border-radius:7px;min-width:48px;text-align:center}
+input[type=range]{
+  -webkit-appearance:none;width:100%;height:5px;border-radius:3px;
+  background:rgba(255,255,255,.1);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:19px;height:19px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  cursor:pointer;box-shadow:0 0 12px rgba(0,212,255,.5);
+  transition:transform .2s ease;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25)}
+
+/* ── TOGGLE ──────────────────────────────────────────────── */
+.tgl-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:11px;
+  transition:border-color .25s;
+}
+.tgl-row:hover{border-color:rgba(255,255,255,.18)}
+.tgl-lbl{font-size:13px;font-weight:500;color:var(--sub)}
+.tgl{position:relative;width:46px;height:25px}
+.tgl input{opacity:0;width:0;height:0}
+.tgl-track{
+  position:absolute;inset:0;border-radius:25px;
+  background:rgba(255,255,255,.1);cursor:pointer;transition:.3s;
+}
+.tgl-track::before{
+  content:'';position:absolute;width:19px;height:19px;
+  left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;
+}
+.tgl input:checked~.tgl-track{background:linear-gradient(135deg,var(--blue),var(--purple))}
+.tgl input:checked~.tgl-track::before{transform:translateX(21px)}
+
+/* ── PREDICT BTN ─────────────────────────────────────────── */
+.pred-btn{
+  width:100%;padding:15px;font-size:15px;font-weight:800;font-family:'Inter',sans-serif;
+  letter-spacing:1.2px;text-transform:uppercase;border:none;border-radius:14px;
+  color:#fff;cursor:pointer;position:relative;overflow:hidden;margin-top:6px;
+  background:linear-gradient(135deg,#00d4ff,#8b5cf6,#ec4899);
+  background-size:250% 250%;animation:btnGrad 5s ease infinite;
+  transition:transform .25s,box-shadow .25s;
+}
+@keyframes btnGrad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.pred-btn::after{
+  content:'';position:absolute;inset:0;background:rgba(255,255,255,0);
+  transition:background .2s;
+}
+.pred-btn:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(139,92,246,.45)}
+.pred-btn:hover::after{background:rgba(255,255,255,.07)}
+.pred-btn:active{transform:translateY(0)}
+.pred-btn.loading{pointer-events:none;opacity:.85}
+.btn-inner{display:flex;align-items:center;justify-content:center;gap:10px}
+.spin{display:none;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── RESULT PANEL ─────────────────────────────────────────── */
+.result-sticky{position:sticky;top:20px;display:flex;flex-direction:column;gap:18px}
+
+/* placeholder */
+.placeholder{padding:56px 20px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.ph-icon{font-size:62px;animation:float 3.5s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.ph-txt{color:var(--sub);font-size:13.5px;line-height:1.7}
+.ph-txt strong{color:var(--txt)}
+
+/* result content */
+.res-content{display:none;text-align:center;padding-bottom:4px}
+.res-title{font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--sub);margin-bottom:22px}
+
+/* ── GAUGE ───────────────────────────────────────────────── */
+.gauge-wrap{position:relative;width:210px;height:210px;margin:0 auto 22px}
+.gauge-svg{width:100%;height:100%;transform:rotate(-90deg)}
+.g-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:18}
+.g-fill{fill:none;stroke-width:18;stroke-linecap:round;stroke-dasharray:565;stroke-dashoffset:565;
+  transition:stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1),stroke .5s ease}
+.g-glow{fill:none;stroke-width:28;stroke-linecap:round;stroke-dasharray:565;stroke-dashoffset:565;opacity:.2;
+  transition:stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1),stroke .5s ease;filter:blur(6px)}
+.gauge-ctr{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;width:140px}
+.g-pct{font-size:2.9rem;font-weight:900;line-height:1}
+.g-lbl{font-size:10.5px;color:var(--sub);margin-top:5px;text-transform:uppercase;letter-spacing:1px}
+.g-tier{font-size:11px;font-weight:700;margin-top:4px;letter-spacing:.5px}
+
+/* ── BADGE ───────────────────────────────────────────────── */
+.badge{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 26px;
+  border-radius:30px;font-size:14px;font-weight:700;margin-bottom:22px;
+  animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes popIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.badge-yes{background:rgba(0,255,136,.12);border:1px solid rgba(0,255,136,.35);color:var(--green)}
+.badge-no {background:rgba(255,68,102,.12);border:1px solid rgba(255,68,102,.35);color:var(--red)}
+
+/* ── STATS ROW ───────────────────────────────────────────── */
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.stat{background:rgba(255,255,255,.04);border-radius:12px;padding:13px 10px;text-align:center}
+.stat-v{font-size:1.25rem;font-weight:800}
+.stat-l{font-size:10px;color:var(--sub);margin-top:3px;text-transform:uppercase;letter-spacing:.8px}
+
+/* ── DIVIDER ─────────────────────────────────────────────── */
+.div{height:1px;background:var(--border);margin:18px 0}
+
+/* ── FACTORS ─────────────────────────────────────────────── */
+.fac-title{font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);text-align:left;margin-bottom:11px}
+.fac{display:flex;align-items:center;gap:9px;padding:9px 13px;background:rgba(255,255,255,.04);border-radius:10px;margin-bottom:8px;animation:slideR .4s ease both;text-align:left}
+.fac:nth-child(1){animation-delay:.05s}.fac:nth-child(2){animation-delay:.12s}.fac:nth-child(3){animation-delay:.19s}.fac:nth-child(4){animation-delay:.26s}.fac:nth-child(5){animation-delay:.33s}
+@keyframes slideR{from{transform:translateX(18px);opacity:0}to{transform:translateX(0);opacity:1}}
+.fac-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.fac-name{font-size:12.5px;flex:1;color:var(--txt)}
+.fac-bar-bg{width:55px;height:4px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.fac-bar{height:100%;border-radius:3px;transition:width 1s ease}
+.fac-pct{font-size:10.5px;color:var(--sub);width:36px;text-align:right}
+
+/* ── MODEL INFO CARD ─────────────────────────────────────── */
+.info-card{animation:fadeUp .8s ease .5s both}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-key{color:var(--sub)}
+.info-val{font-weight:700}
+
+/* ── ANIMATIONS ──────────────────────────────────────────── */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+.footer{text-align:center;color:var(--sub);font-size:12px;margin-top:36px;padding-top:20px;border-top:1px solid var(--border)}
+
+/* ── SCROLLBAR ───────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+
+/* ── TOAST ───────────────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:rgba(20,20,50,.95);border:1px solid var(--border);backdrop-filter:blur(20px);
+  padding:12px 22px;border-radius:12px;font-size:13px;font-weight:600;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1);z-index:9999;white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="aurora"></div>
+<canvas id="bgCanvas"></canvas>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <h1>Sales Lead Predictor</h1>
+    <p>Enter lead details below and get an instant conversion probability with confidence score</p>
+  </div>
+
+  <!-- META PILLS -->
+  <div class="meta-row">
+    <div class="meta-pill"><div class="dot" style="background:#00ff88"></div>Accuracy 92.53%</div>
+    <div class="meta-pill"><div class="dot" style="background:#00d4ff"></div>ROC-AUC 0.9729</div>
+    <div class="meta-pill"><div class="dot" style="background:#ffd700"></div>F1 Score 0.9040</div>
+    <div class="meta-pill"><div class="dot" style="background:#8b5cf6"></div>200 Features</div>
+    <div class="meta-pill"><div class="dot" style="background:#ec4899"></div>XGBoost Classifier</div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid">
+
+    <!-- ── FORM PANEL ── -->
+    <div class="card">
+      <form id="frm">
+
+        <!-- 1: LEAD INFORMATION -->
+        <div class="sec">
+          <div class="sec-head">
+            <div class="sec-icon" style="background:rgba(0,212,255,.13)">🎯</div>
+            <span class="sec-title">Lead Information</span>
+          </div>
+          <div class="fg fg-2">
+            <div class="fld">
+              <label>Lead Origin <span class="imp imp-h">★ HIGH</span></label>
+              <div class="sel-wrap">
+                <select name="Lead Origin">
+                  <option value="">— Select Origin —</option>
+                  {% for v in dropdown.get('Lead Origin',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="fld">
+              <label>Lead Source <span class="imp imp-m">MED</span></label>
+              <div class="sel-wrap">
+                <select name="Lead Source">
+                  <option value="">— Select Source —</option>
+                  {% for v in dropdown.get('Lead Source',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="fld">
+              <label>Lead Profile <span class="imp imp-h">★ HIGH</span></label>
+              <div class="sel-wrap">
+                <select name="Lead Profile">
+                  <option value="">— Select Profile —</option>
+                  {% for v in dropdown.get('Lead Profile',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="fld">
+              <label>Tags <span class="imp imp-h">★ HIGH</span></label>
+              <div class="sel-wrap">
+                <select name="Tags">
+                  <option value="">— Select Tag —</option>
+                  {% for v in dropdown.get('Tags',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2: WEBSITE ENGAGEMENT -->
+        <div class="sec">
+          <div class="sec-head">
+            <div class="sec-icon" style="background:rgba(139,92,246,.15)">📊</div>
+            <span class="sec-title">Website Engagement</span>
+          </div>
+          <div class="fg fg-1">
+            <div class="slider-wrap">
+              <div class="slider-top">
+                <label>Total Time Spent on Website (sec) <span class="imp imp-h">★ HIGH</span></label>
+                <span class="sval" id="timeVal">0</span>
+              </div>
+              <input type="range" id="timeSlider" name="Total Time Spent on Website" min="0" max="2272" step="10" value="0"
+                oninput="syncSlider(this,'timeVal')">
+            </div>
+          </div>
+          <div class="fg fg-3" style="margin-top:13px">
+            <div class="fld">
+              <label>Total Visits <span class="imp imp-l">LOW</span></label>
+              <input type="number" name="TotalVisits" min="0" max="200" placeholder="e.g. 5">
+            </div>
+            <div class="fld">
+              <label>Page Views / Visit <span class="imp imp-l">LOW</span></label>
+              <input type="number" name="Page Views Per Visit" min="0" max="55" step="0.1" placeholder="e.g. 2.5">
+            </div>
+            <div class="fld">
+              <label>Last Activity <span class="imp imp-m">MED</span></label>
+              <div class="sel-wrap">
+                <select name="Last Activity">
+                  <option value="">— Select —</option>
+                  {% for v in dropdown.get('Last Activity',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3: ACTIVITY & NOTABLE EVENTS -->
+        <div class="sec">
+          <div class="sec-head">
+            <div class="sec-icon" style="background:rgba(236,72,153,.13)">⚡</div>
+            <span class="sec-title">Activity &amp; Notable Events</span>
+          </div>
+          <div class="fg fg-2">
+            <div class="fld">
+              <label>Last Notable Activity <span class="imp imp-h">★ HIGH</span></label>
+              <div class="sel-wrap">
+                <select name="Last Notable Activity">
+                  <option value="">— Select —</option>
+                  {% for v in dropdown.get('Last Notable Activity',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="fld">
+              <label>What Matters Most in Course <span class="imp imp-l">LOW</span></label>
+              <div class="sel-wrap">
+                <select name="What matters most to you in choosing a course">
+                  <option value="">— Select —</option>
+                  {% for v in dropdown.get('What matters most to you in choosing a course',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="fld">
+              <label>How Did You Hear About Us <span class="imp imp-l">LOW</span></label>
+              <div class="sel-wrap">
+                <select name="How did you hear about X Education">
+                  <option value="">— Select —</option>
+                  {% for v in dropdown.get('How did you hear about X Education',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="fld">
+              <label>Specialization <span class="imp imp-m">MED</span></label>
+              <div class="sel-wrap">
+                <select name="Specialization">
+                  <option value="">— Select —</option>
+                  {% for v in dropdown.get('Specialization',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4: CUSTOMER PROFILE -->
+        <div class="sec">
+          <div class="sec-head">
+            <div class="sec-icon" style="background:rgba(0,255,136,.1)">👤</div>
+            <span class="sec-title">Customer Profile</span>
+          </div>
+          <div class="fg fg-2">
+            <div class="fld">
+              <label>Current Occupation <span class="imp imp-h">★ HIGH</span></label>
+              <div class="sel-wrap">
+                <select name="What is your current occupation">
+                  <option value="">— Select —</option>
+                  {% for v in dropdown.get('What is your current occupation',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="fld">
+              <label>City <span class="imp imp-h">★ HIGH</span></label>
+              <div class="sel-wrap">
+                <select name="City">
+                  <option value="">— Select —</option>
+                  {% for v in dropdown.get('City',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="fld">
+              <label>Country <span class="imp imp-l">LOW</span></label>
+              <div class="sel-wrap">
+                <select name="Country">
+                  <option value="">— Select —</option>
+                  {% for v in dropdown.get('Country',[]) %}<option value="{{v}}">{{v}}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="fld">
+              <label>Free Interview Copy</label>
+              <div class="sel-wrap">
+                <select name="A free copy of Mastering The Interview">
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5: COMMUNICATION PREFERENCES -->
+        <div class="sec">
+          <div class="sec-head">
+            <div class="sec-icon" style="background:rgba(255,215,0,.1)">⚙️</div>
+            <span class="sec-title">Communication Preferences</span>
+          </div>
+          <div class="fg fg-2">
+            <div class="tgl-row">
+              <span class="tgl-lbl">Do Not Email</span>
+              <label class="tgl">
+                <input type="checkbox" id="dne" onchange="syncToggle(this,'Do Not Email')">
+                <span class="tgl-track"></span>
+              </label>
+              <input type="hidden" name="Do Not Email" value="No">
+            </div>
+            <div class="tgl-row">
+              <span class="tgl-lbl">Do Not Call</span>
+              <label class="tgl">
+                <input type="checkbox" id="dnc" onchange="syncToggle(this,'Do Not Call')">
+                <span class="tgl-track"></span>
+              </label>
+              <input type="hidden" name="Do Not Call" value="No">
+            </div>
+          </div>
+        </div>
+
+        <!-- PREDICT BUTTON -->
+        <button type="button" class="pred-btn" onclick="runPredict()" id="predBtn">
+          <div class="btn-inner">
+            <div class="spin" id="spin"></div>
+            <span id="btnTxt">⚡&nbsp; Predict Conversion</span>
+          </div>
+        </button>
+
+      </form>
+    </div><!-- /form panel -->
+
+    <!-- ── RESULT PANEL ── -->
+    <div class="result-sticky">
+      <div class="card">
+
+        <!-- placeholder -->
+        <div class="placeholder" id="phld">
+          <div class="ph-icon">🎯</div>
+          <div class="ph-txt">Fill in the lead details on the left<br>and click <strong>Predict Conversion</strong><br>to see the AI result.</div>
+        </div>
+
+        <!-- result -->
+        <div class="res-content" id="resContent">
+          <div class="res-title">Prediction Result</div>
+
+          <!-- gauge -->
+          <div class="gauge-wrap">
+            <svg class="gauge-svg" viewBox="0 0 200 200">
+              <circle class="g-glow" id="gGlow" cx="100" cy="100" r="90"/>
+              <circle class="g-bg"   cx="100" cy="100" r="90"/>
+              <circle class="g-fill" id="gFill" cx="100" cy="100" r="90"/>
+            </svg>
+            <div class="gauge-ctr">
+              <div class="g-pct" id="gPct">0%</div>
+              <div class="g-lbl">Probability</div>
+              <div class="g-tier" id="gTier"></div>
+            </div>
+          </div>
+
+          <!-- badge -->
+          <div id="resBadge" class="badge"></div>
+
+          <!-- stats -->
+          <div class="stats">
+            <div class="stat"><div class="stat-v" id="sConf">—</div><div class="stat-l">Confidence</div></div>
+            <div class="stat"><div class="stat-v" id="sTier">—</div><div class="stat-l">Lead Tier</div></div>
+            <div class="stat"><div class="stat-v" id="sVerdict">—</div><div class="stat-l">Action</div></div>
+          </div>
+
+          <div class="div"></div>
+
+          <!-- key factors -->
+          <div class="fac-title">Top Influencing Factors</div>
+          <div id="facList"></div>
+        </div>
+
+      </div><!-- /result card -->
+
+      <!-- model info -->
+      <div class="card info-card">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--sub);margin-bottom:14px">Model Details</div>
+        <div class="info-row"><span class="info-key">Algorithm</span><span class="info-val" style="color:var(--blue)">XGBoost</span></div>
+        <div class="info-row"><span class="info-key">ROC-AUC</span><span class="info-val" style="color:var(--green)">0.9729</span></div>
+        <div class="info-row"><span class="info-key">Accuracy</span><span class="info-val" style="color:var(--green)">92.53%</span></div>
+        <div class="info-row"><span class="info-key">F1 Score</span><span class="info-val" style="color:var(--gold)">0.9040</span></div>
+        <div class="info-row"><span class="info-key">Training Set</span><span class="info-val">7,392 records</span></div>
+        <div class="info-row"><span class="info-key">Features</span><span class="info-val">200 (post-OHE)</span></div>
+      </div>
+
+    </div><!-- /result panel -->
+  </div><!-- /grid -->
+
+  <div class="footer">AI Sales Lead Prediction System &nbsp;·&nbsp; XGBoost Classifier &nbsp;·&nbsp; Trained on 9,240 CRM Records</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── PARTICLE CANVAS ───────────────────────────────────────── */
+const cvs = document.getElementById('bgCanvas');
+const ctx = cvs.getContext('2d');
+function resize(){ cvs.width = innerWidth; cvs.height = innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+const PCOUNT = 70;
+class P {
+  constructor(){ this.reset(true) }
+  reset(init){
+    this.x  = Math.random()*cvs.width;
+    this.y  = init ? Math.random()*cvs.height : (Math.random()<.5 ? -5 : cvs.height+5);
+    this.vx = (Math.random()-.5)*.35;
+    this.vy = (Math.random()-.5)*.35;
+    this.r  = Math.random()*1.8+.4;
+    this.a  = Math.random()*.35+.05;
+    this.h  = Math.random()>.5 ? 200 : 270;
+  }
+  tick(){
+    this.x+=this.vx; this.y+=this.vy;
+    if(this.x<-10||this.x>cvs.width+10||this.y<-10||this.y>cvs.height+10) this.reset(false);
+  }
+  draw(){
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${this.h},80%,72%,${this.a})`;
+    ctx.fill();
+  }
+}
+const pts=[]; for(let i=0;i<PCOUNT;i++) pts.push(new P());
+
+function drawLines(){
+  for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy);
+    if(d<130){
+      ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y);
+      ctx.strokeStyle=`rgba(139,92,246,${.12*(1-d/130)})`; ctx.lineWidth=.6; ctx.stroke();
+    }
+  }
+}
+(function loop(){ ctx.clearRect(0,0,cvs.width,cvs.height); pts.forEach(p=>{p.tick();p.draw();}); drawLines(); requestAnimationFrame(loop); })();
+
+/* ── SLIDER SYNC ───────────────────────────────────────────── */
+function syncSlider(el, valId){
+  document.getElementById(valId).textContent = el.value;
+  const pct = (el.value-el.min)/(el.max-el.min)*100;
+  el.style.background=`linear-gradient(to right,#00d4ff 0%,#8b5cf6 ${pct}%,rgba(255,255,255,.1) ${pct}%)`;
+}
+syncSlider(document.getElementById('timeSlider'),'timeVal');
+
+/* ── TOGGLE SYNC ───────────────────────────────────────────── */
+function syncToggle(cb, name){
+  document.querySelector(`input[type=hidden][name="${name}"]`).value = cb.checked?'Yes':'No';
+}
+
+/* ── TOAST ─────────────────────────────────────────────────── */
+function showToast(msg, color='var(--blue)'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.color=color; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ── ANIMATE NUMBER ────────────────────────────────────────── */
+function animNum(el, from, to, ms, suffix='%'){
+  const t0=performance.now();
+  (function tick(now){
+    const p=Math.min((now-t0)/ms,1), ease=1-Math.pow(1-p,3);
+    el.textContent=Math.round(from+(to-from)*ease)+suffix;
+    if(p<1) requestAnimationFrame(tick);
+  })(performance.now());
+}
+
+/* ── GAUGE UPDATE ──────────────────────────────────────────── */
+function setGauge(prob){
+  const fill=document.getElementById('gFill');
+  const glow=document.getElementById('gGlow');
+  const pctEl=document.getElementById('gPct');
+  const tierEl=document.getElementById('gTier');
+  const C=565, off=C-(prob*C);
+  let color, tier;
+  if(prob>=.75){ color='#00ff88'; tier='🔥 Hot Lead'; }
+  else if(prob>=.50){ color='#ffd700'; tier='☀️ Warm Lead'; }
+  else if(prob>=.30){ color='#00d4ff'; tier='🌊 Cool Lead'; }
+  else { color='#ff4466'; tier='❄️ Cold Lead'; }
+  fill.style.strokeDashoffset=off; fill.style.stroke=color;
+  glow.style.strokeDashoffset=off; glow.style.stroke=color;
+  pctEl.style.color=color; tierEl.textContent=tier; tierEl.style.color=color;
+  animNum(pctEl, 0, Math.round(prob*100), 1600);
+}
+
+/* ── PREDICT ───────────────────────────────────────────────── */
+async function runPredict(){
+  const btn=document.getElementById('predBtn');
+  const spin=document.getElementById('spin');
+  const btnTxt=document.getElementById('btnTxt');
+
+  btn.classList.add('loading');
+  spin.style.display='block';
+  btnTxt.textContent='Analyzing Lead…';
+
+  const fd=new FormData(document.getElementById('frm'));
+  const payload={};
+  fd.forEach((v,k)=>{
+    if(v!==''&&v!==null){
+      const n=parseFloat(v);
+      payload[k]=isNaN(n)?v:n;
+    }
+  });
+
+  try{
+    const res=await fetch('/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!res.ok) throw new Error('Server error');
+    const data=await res.json();
+    renderResult(data);
+  } catch(e){
+    showToast('⚠ Prediction failed — check server', 'var(--red)');
+  } finally{
+    btn.classList.remove('loading');
+    spin.style.display='none';
+    btnTxt.textContent='⚡\u00a0 Predict Conversion';
+  }
+}
+
+/* ── RENDER RESULT ─────────────────────────────────────────── */
+function renderResult(r){
+  document.getElementById('phld').style.display='none';
+  const rc=document.getElementById('resContent');
+  rc.style.display='block';
+  rc.style.animation='none'; void rc.offsetWidth; rc.style.animation='fadeUp .6s ease';
+
+  const prob=r.probability, pred=r.prediction;
+
+  setGauge(prob);
+
+  // badge
+  const badge=document.getElementById('resBadge');
+  badge.className='badge '+(pred===1?'badge-yes':'badge-no');
+  badge.innerHTML=pred===1?'✅ &nbsp;High Conversion Likely':'❌ &nbsp;Low Conversion Likelihood';
+  badge.style.animation='none'; void badge.offsetWidth; badge.style.animation='popIn .5s cubic-bezier(.34,1.56,.64,1) both';
+
+  // stats
+  document.getElementById('sConf').textContent=r.confidence;
+  document.getElementById('sConf').style.color=prob>=.5?'var(--green)':'var(--red)';
+  document.getElementById('sTier').textContent=r.tier;
+  const tierColors={'Hot Lead':'#ff6b35','Warm Lead':'#ffd700','Cool Lead':'#00d4ff','Cold Lead':'#7b8db0'};
+  document.getElementById('sTier').style.color=tierColors[r.tier]||'var(--txt)';
+  document.getElementById('sVerdict').textContent=pred===1?'Convert':'Skip';
+  document.getElementById('sVerdict').style.color=pred===1?'var(--green)':'var(--red)';
+
+  // factors
+  const factors=[
+    {name:'Lead Origin',      pct:33.3, color:'#00d4ff'},
+    {name:'Tags / CRM Status',pct:22.0, color:'#8b5cf6'},
+    {name:'Last Notable Actv',pct:7.9,  color:'#ec4899'},
+    {name:'Lead Profile',     pct:7.3,  color:'#ffd700'},
+    {name:'Time on Website',  pct:1.3,  color:'#00ff88'},
+  ];
+  const fl=document.getElementById('facList'); fl.innerHTML='';
+  factors.forEach(f=>{
+    const d=document.createElement('div'); d.className='fac';
+    d.innerHTML=`<div class="fac-dot" style="background:${f.color}"></div>
+      <span class="fac-name">${f.name}</span>
+      <div class="fac-bar-bg"><div class="fac-bar" style="width:0;background:${f.color}" data-w="${f.pct/33.3*55}"></div></div>
+      <span class="fac-pct">${f.pct}%</span>`;
+    fl.appendChild(d);
+  });
+  // animate bars after mount
+  setTimeout(()=>{ fl.querySelectorAll('.fac-bar').forEach(b=>{ b.style.width=b.dataset.w+'px'; }); },100);
+
+  // confetti if hot
+  if(pred===1&&prob>.70) confetti();
+
+  // mobile scroll
+  if(innerWidth<1080) rc.closest('.card').scrollIntoView({behavior:'smooth',block:'start'});
+  showToast(pred===1?'🎯 High conversion lead detected!':'📋 Low conversion likelihood', pred===1?'var(--green)':'var(--sub)');
+}
+
+/* ── CONFETTI ──────────────────────────────────────────────── */
+function confetti(){
+  const cols=['#00d4ff','#8b5cf6','#ec4899','#00ff88','#ffd700','#ff6b35'];
+  if(!document.getElementById('cStyle')){
+    const s=document.createElement('style'); s.id='cStyle';
+    s.textContent='@keyframes cFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+    document.head.appendChild(s);
+  }
+  for(let i=0;i<80;i++) setTimeout(()=>{
+    const el=document.createElement('div');
+    const sz=Math.random()*7+3;
+    el.style.cssText=`position:fixed;top:-10px;left:${Math.random()*100}vw;width:${sz}px;height:${sz}px;
+      background:${cols[0|Math.random()*cols.length]};border-radius:${Math.random()>.5?'50%':'3px'};
+      z-index:9998;pointer-events:none;
+      animation:cFall ${Math.random()*2+1.5}s ease-in ${Math.random()*.5}s forwards;`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),4000);
+  }, i*25);
+}
+
+/* ── ENTER KEY ─────────────────────────────────────────────── */
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.ctrlKey) runPredict(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+[*] Loading saved model …
+[OK] Model loaded.
+
+[OK] Server ready --> http://127.0.0.1:5000
+
+ * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+127.0.0.1 - - [25/Mar/2026 22:36:39] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 22:36:39] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 22:36:57] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 22:42:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 22:42:28] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [25/Mar/2026 22:53:49] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 22:56:20] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 22:56:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:30:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:34:28] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:38:15] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:43:17] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:46:33] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:47:07] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:47:07] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:47:07] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:48:38] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:48:38] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:48:38] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:48:38] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:48:38] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:48:39] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:54:20] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:56:29] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [25/Mar/2026 23:57:57] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:19] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:19] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:19] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:19] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:19] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:36] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:36] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:36] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:37] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:37] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:37] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:37] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:37] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:37] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:37] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:51] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:51] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:51] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:51] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:51] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:51] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:00:51] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:01:07] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:01:07] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:01:07] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:01:07] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:01:07] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:01:07] "POST /predict HTTP/1.1" 200 -
+127.0.0.1 - - [26/Mar/2026 00:01:23] "POST /predict HTTP/1.1" 200 -
